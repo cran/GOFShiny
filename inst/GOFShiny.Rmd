@@ -1,0 +1,83 @@
+---
+title: "Chisquare Goodness of Fit Test  or Single population proportion Test"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rhandsontable)
+```
+
+
+
+```{r , echo=FALSE}
+
+inputPanel(
+  
+   sliderInput("los", label = "Enter the level of significance:",
+                    min = 0.01, max = 0.1, value = 0.05, step = 0.01),
+   selectInput("Tail", label = " For Single Proportion testChoose among less(lower tail),greater(upper tail),two.sided(Two tail)", choices = c("less","greater","two.sided"), selected = "two.sided")
+)
+mainPanel(
+  
+   rHandsontableOutput("testdata"),
+  verbatimTextOutput("MD"),
+   h6("", tags$img(src ="K.JPG", height= 400, width=400))
+  
+)
+output$testdata<- renderRHandsontable({
+
+     
+    
+     ds = data.frame(observed_frequency = c(540,480,40,140), proportion =c(0.48,0.38,0.04,0.10))
+    
+ 
+   rhandsontable(data.frame(ds))
+   
+   
+
+  })
+
+
+
+output$MD<-renderPrint({
+ 
+       test_data = data.frame(hot_to_r(input$testdata))
+       attach(test_data)
+
+      
+       
+       res <- chisq.test(observed_frequency,p = proportion )
+      test_data$expected_frequency =  res$expected
+      cat(sprintf("\nThe expected frequencies are as follows\n"))
+      cat(sprintf("%f",test_data$expected_frequency))
+      
+      cat(sprintf("\nThe results of the test(two-sided) are as follows\n"))
+       print(res)
+       if(input$Tail == "two.sided")
+       {
+       if(res$p.value < input$los)
+       {cat(sprintf("There is enough evidence to reject NULL hypothesis of Goodness of Fit"))}
+       else
+       {cat(sprintf("There is not enough evidence to reject NULL hypothesis of Goodness of Fit"))}  
+       
+       }
+       else
+       {
+          cat(sprintf("\nThe p-value for one-sided test is %f\n",(res$p.value/2)))
+          if((res$p.value/2)< input$los)
+       {cat(sprintf("There is enough evidence to reject NULL hypothesis "))}
+       else
+       {cat(sprintf("There is not enough evidence to reject NULL hypothesis "))}  
+       
+       }
+          
+       
+           
+      
+   } )
+   
+
+```
+
